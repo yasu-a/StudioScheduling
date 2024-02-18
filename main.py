@@ -1,5 +1,6 @@
 import collections
 import functools
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -67,9 +68,8 @@ class Agent:
         return table_band_occurrence_count(self.__a)
 
     def root_occupation_rate(self):
-        max_n_bands = (N_TIMESPANS * N_ROOMS) // len(s_band) * len(s_band)
         band_occ = self.band_occurrence_count().min()
-        return band_occ * len(s_band) / max_n_bands
+        return band_occ * len(s_band) / MAX_N_BANDS
 
     def description(self):
         oc = self.band_occurrence_count()
@@ -77,13 +77,69 @@ class Agent:
                f'{self.root_occupation_rate() * 100:.0f}%'
         return desc
 
+    def table(self):
+        return [
+            [m_band_to_name[b] for b in s_band[b_mask]]
+            for b_mask in s_band_nodup_member[self.__a].astype(bool)
+        ]
+
+    @property
+    def array(self):
+        return self.__a.copy()
+
 
 class State:
-    def __init__(self, n_agents=512):
-        self.__n_agents = n_agents
-
-        self.__agents = [Agent() for _ in range(self.__n_agents)]
+    def __init__(self, agents: list['Agent']):
+        self.__agents = agents
         self.__history = collections.defaultdict(list)
+
+    @classmethod
+    def random_init(cls, n_agents=512):
+        return State(agents=[Agent() for _ in range(n_agents)])
+
+    # @classmethod
+    # def oversampled_init(cls, n_agents=512, oversampling_ratio=32):
+    #     print('oversampled_initialization')
+    #     x = []
+    #     a_lst = []
+    #     for _ in tqdm(range(oversampling_ratio)):
+    #         s = State.random_init(n_agents)
+    #         s.local_search()
+    #         x += [a.array for a in s.__agents]
+    #         a_lst += s.__agents
+    #     x = np.stack(x)
+    #     x = s_band_nodup_member[x].reshape(x.shape[0], -1)
+    #
+    #     from sklearn.pipeline import Pipeline
+    #     from sklearn.preprocessing import StandardScaler
+    #     from sklearn.decomposition import PCA
+    #
+    #     pca_pl = Pipeline([
+    #         ('std', StandardScaler()),
+    #         ('pca', PCA(n_components=0.85))
+    #     ])
+    #     x_pca = pca_pl.fit_transform(x)
+    #
+    #     from sklearn.cluster import MiniBatchKMeans
+    #
+    #     kmeans = MiniBatchKMeans(n_clusters=n_agents)
+    #     kmeans.fit(x_pca)
+    #     centers = kmeans.cluster_centers_
+    #
+    #     from scipy.spatial import cKDTree
+    #
+    #     repr_idx = cKDTree(x_pca).query(centers)[1]
+    #     a_init = [a_lst[i].clone() for i in repr_idx]
+    #
+    #     # from sklearn.manifold import TSNE
+    #
+    #     # plt.figure(figsize=(20, 20))
+    #     # plt.scatter(
+    #     #     *TSNE(n_components=2, verbose=2).fit_transform(x).T
+    #     # )
+    #     # plt.show()
+    #
+    #     return State(a_init)
 
     def local_search(self):
         # self.__agents = joblib.Parallel(n_jobs=4)(
@@ -117,16 +173,20 @@ class State:
         s = self.scores()
         w = (s - s.mean()) / s.std()
         w = np.clip(w + 2, 0, 4) / 4
-        w **= 3
+        w **= 6
         w /= w.sum()
         idx = np.random.choice(np.arange(len(self.__agents)), size=n, p=w)
         return [self.__agents[i].clone() for i in idx]
 
-    def reset_agents(self, n_best=8, n_worst=8):
+    def reset_agents(self, n_best=8, n_worst=8, r_best=1, r_worst=0.25):
         new_agents = []
         for a in self.__choose_best(n_best):
+            if np.random.random() < r_best:
+                a = a.far_neighbour(k=1)
             new_agents.append(a)
         for a in self.__choose_worst(n_worst):
+            if np.random.random() < r_worst:
+                a = a.far_neighbour(k=1)
             new_agents.append(a)
         for a in self.__choose_middle(len(self.__agents) - n_best - n_worst):
             new_agents.append(a.far_neighbour())
@@ -145,7 +205,7 @@ class State:
 if __name__ == '__main__':
     N_ROOMS = 7
     print(f'{N_ROOMS=}')
-    N_TIMESPANS = 22
+    N_TIMESPANS = 5
     print(f'{N_TIMESPANS=}')
 
     s_timespan = np.arange(N_TIMESPANS)
@@ -158,6 +218,11 @@ if __name__ == '__main__':
     s_band = np.arange(len(m_band_to_name))
     print(f'{len(s_band)=}')
 
+    MAX_N_BAND_OCC = int((N_TIMESPANS * N_ROOMS) / len(s_band))
+    print(f'{MAX_N_BAND_OCC=}')
+    MAX_N_BANDS = MAX_N_BAND_OCC * len(s_band)
+    print(f'{MAX_N_BANDS=}')
+
     m_person_to_name = {
         idx: name
         for idx, name in enumerate(sorted({
@@ -167,11 +232,6 @@ if __name__ == '__main__':
     }
     s_person = np.arange(len(m_person_to_name))
     print(f'{len(s_person)=}')
-
-
-    def reverse_get(d, target_key):
-        return {v: k for k, v in d.items()}.get(target_key)
-
 
     m_band_to_member = {
         band_name: np.array([m_person_to_name[idx] in member_names for idx in s_person]).astype(
@@ -229,19 +289,18 @@ if __name__ == '__main__':
 
 
     def table_band_occurrence_count(table):
-        occ_array = s_band_nodup_member[table].sum(axis=0)
+        occ_array = s_band_nodup_member[table].astype(np.int16).sum(axis=0)
         return occ_array
 
 
     def table_band_occurrence_score(table):
         occ_array = table_band_occurrence_count(table)
-        return np.mean(occ_array) * 2 + occ_array.min() * 5 - occ_array.max() * 3  # 4
-        # return np.min(occ_array)
+        return -np.mean(np.abs(occ_array - MAX_N_BAND_OCC))  # max is 0
 
 
 def main():
     plt.figure()
-    state = State()
+    state = State.random_init()
     best = None
     bar = tqdm(range(1024))
     for i_iter in bar:
@@ -262,6 +321,12 @@ def main():
             state.plot_history()
             plt.legend()
             plt.pause(0.01)
+
+        if best.root_occupation_rate() > 0.999:
+            break
+
+    for row in best.table():
+        print(sorted(row))
 
 
 if __name__ == '__main__':
