@@ -62,6 +62,10 @@ class ProjectData:
         return a
 
     @functools.cached_property
+    def n_timespan(self) -> int:
+        return self.input_json['config']['n_timespan']
+
+    @functools.cached_property
     def n_room(self) -> int:
         return self.input_json['config']['n_room']
 
@@ -143,8 +147,8 @@ class ProjectData:
         return a
 
     @functools.lru_cache(maxsize=65536)
-    def get_neighbour(self, b):
-        return self.band_set_neighbour_indexes[b]
+    def get_neighbour(self, band_set_index):
+        return self.band_set_neighbour_indexes[band_set_index]
 
     def dump_cache(self):
         _ = self.band_set_space
@@ -153,3 +157,20 @@ class ProjectData:
 
     def load_cache(self):
         self.__cache = self.project.load_pickle('cache')
+
+    def table_band_occurrence_count(self, band_set_indexes):
+        band_occ_count = self.band_set_space[band_set_indexes].sum(axis=0)
+        return band_occ_count
+
+    @functools.cached_property
+    def n_max_band_occurrence(self):
+        return int(self.n_timespan * self.n_room) / self.n_band
+
+    @functools.cached_property
+    def n_max_total_bands(self):
+        return self.n_max_band_occurrence * self.n_band
+
+    def band_occurrence_ratio(self, band_set_indexes):
+        band_occ_count = self.table_band_occurrence_count(band_set_indexes)
+        n_total_band_occ = band_occ_count.sum()
+        return n_total_band_occ / self.n_max_total_bands
