@@ -44,13 +44,16 @@ class Agent:
 
     def local_search(self, k=16, improvement_thresh=1e-6) -> 'Agent':
         best = self
+
         while True:
             better = self.stochastic_better(k)
             improvement = better.score - best.score
             if improvement > 0:
                 best = better
             if improvement < improvement_thresh:
-                return best
+                break
+
+        return best
 
     def far_neighbour(self, k=2) -> 'Agent':
         a = self
@@ -87,59 +90,27 @@ class Agent:
     def array(self):
         return self.__a.copy()
 
+    def occurrence_pair_matrix(self):
+        mat = np.zeros(shape=(len(s_band), len(s_band)), dtype=np.float32)
+
+        sb = s_band_nodup_member[self.array]
+
+        for b in s_band:
+            ts_mask = sb[:, b].astype(bool)
+            mat[b, :] = sb[ts_mask, :].sum(axis=0)
+            mat[b, b] = 0
+
+        return mat
+
 
 class State:
     def __init__(self, agents: list['Agent']):
         self.__agents = agents
-        self.__history = collections.defaultdict(list)
+        self.__history = [collections.defaultdict(list) for _ in range(2)]
 
     @classmethod
     def random_init(cls, n_agents=512):
         return State(agents=[Agent() for _ in range(n_agents)])
-
-    # @classmethod
-    # def oversampled_init(cls, n_agents=512, oversampling_ratio=32):
-    #     print('oversampled_initialization')
-    #     x = []
-    #     a_lst = []
-    #     for _ in tqdm(range(oversampling_ratio)):
-    #         s = State.random_init(n_agents)
-    #         s.local_search()
-    #         x += [a.array for a in s.__agents]
-    #         a_lst += s.__agents
-    #     x = np.stack(x)
-    #     x = s_band_nodup_member[x].reshape(x.shape[0], -1)
-    #
-    #     from sklearn.pipeline import Pipeline
-    #     from sklearn.preprocessing import StandardScaler
-    #     from sklearn.decomposition import PCA
-    #
-    #     pca_pl = Pipeline([
-    #         ('std', StandardScaler()),
-    #         ('pca', PCA(n_components=0.85))
-    #     ])
-    #     x_pca = pca_pl.fit_transform(x)
-    #
-    #     from sklearn.cluster import MiniBatchKMeans
-    #
-    #     kmeans = MiniBatchKMeans(n_clusters=n_agents)
-    #     kmeans.fit(x_pca)
-    #     centers = kmeans.cluster_centers_
-    #
-    #     from scipy.spatial import cKDTree
-    #
-    #     repr_idx = cKDTree(x_pca).query(centers)[1]
-    #     a_init = [a_lst[i].clone() for i in repr_idx]
-    #
-    #     # from sklearn.manifold import TSNE
-    #
-    #     # plt.figure(figsize=(20, 20))
-    #     # plt.scatter(
-    #     #     *TSNE(n_components=2, verbose=2).fit_transform(x).T
-    #     # )
-    #     # plt.show()
-    #
-    #     return State(a_init)
 
     def local_search(self):
         # self.__agents = joblib.Parallel(n_jobs=4)(
@@ -154,10 +125,19 @@ class State:
 
     def update_score_stat(self):
         s = self.scores()
-        self.__history['best'].append(s.max())
+        self.__history[0]['best'].append(s.max())
         avg_target = (np.percentile(s, q=25) <= s) & (s <= np.percentile(s, q=75))
-        self.__history['avg'].append(s[avg_target].mean())
-        self.__history['min'].append(s.min())
+        self.__history[0]['avg'].append(s[avg_target].mean())
+        self.__history[0]['min'].append(s.min())
+
+        features = np.stack([
+            a.occurrence_pair_matrix().flatten()
+            for a in self.__agents
+        ])
+        from scipy.spatial.distance import euclidean
+        g = features.mean(axis=0)
+        variance = np.mean([euclidean(a, g) for a in features])
+        self.__history[1]['feature_variance'].append(variance)
 
     def __choose_best(self, n):
         s = self.scores()
@@ -173,20 +153,19 @@ class State:
         s = self.scores()
         w = (s - s.mean()) / s.std()
         w = np.clip(w + 2, 0, 4) / 4
-        w **= 6
+        w **= 16
         w /= w.sum()
         idx = np.random.choice(np.arange(len(self.__agents)), size=n, p=w)
         return [self.__agents[i].clone() for i in idx]
 
-    def reset_agents(self, n_best=8, n_worst=8, r_best=1, r_worst=0.25):
+    def reset_agents(self, n_best=4, n_worst=32, r_worst=0.2):
         new_agents = []
         for a in self.__choose_best(n_best):
-            if np.random.random() < r_best:
-                a = a.far_neighbour(k=1)
-            new_agents.append(a)
+            new_agents.append(a.far_neighbour(k=1))
         for a in self.__choose_worst(n_worst):
-            if np.random.random() < r_worst:
-                a = a.far_neighbour(k=1)
+            a = a.far_neighbour(k=1)
+            if r_worst:
+                a = a.far_neighbour(k=4)
             new_agents.append(a)
         for a in self.__choose_middle(len(self.__agents) - n_best - n_worst):
             new_agents.append(a.far_neighbour())
@@ -198,14 +177,18 @@ class State:
         return self.__agents[self.scores().argmax()]
 
     def plot_history(self):
-        for k, v in self.__history.items():
-            plt.plot(v, label=k)
+        for i, dct in enumerate(self.__history):
+            plt.subplot(2, 1, i + 1)
+            for k, v in dct.items():
+                plt.plot(v, label=k)
+            if i == 1:
+                plt.ylim((5, 9))
 
 
 if __name__ == '__main__':
     N_ROOMS = 7
     print(f'{N_ROOMS=}')
-    N_TIMESPANS = 5
+    N_TIMESPANS = 9
     print(f'{N_TIMESPANS=}')
 
     s_timespan = np.arange(N_TIMESPANS)
@@ -299,10 +282,9 @@ if __name__ == '__main__':
 
 
 def main():
-    plt.figure()
     state = State.random_init()
     best = None
-    bar = tqdm(range(1024))
+    bar = tqdm(range(64))
     for i_iter in bar:
         state.local_search()
         state.update_score_stat()
@@ -317,13 +299,13 @@ def main():
         bar.set_description(
             f'{best.description()} {state_best.description()} {ci.hits=} {ci.misses=} {ci.currsize=}')
 
-        if (i_iter + 1) % 64 == 0:
-            state.plot_history()
-            plt.legend()
-            plt.pause(0.01)
-
         if best.root_occupation_rate() > 0.999:
             break
+
+    plt.figure()
+    state.plot_history()
+    plt.legend()
+    plt.show()
 
     for row in best.table():
         print(sorted(row))
