@@ -46,7 +46,7 @@ class Agent:
         best = self
 
         while True:
-            better = self.stochastic_better(k)
+            better = best.stochastic_better(k)
             improvement = better.score - best.score
             if improvement > 0:
                 best = better
