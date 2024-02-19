@@ -1,6 +1,5 @@
 import collections
 import functools
-import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
