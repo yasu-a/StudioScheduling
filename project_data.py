@@ -90,6 +90,8 @@ class ProjectData:
         return a
 
     def _band_set_space(self):  # -> ndarray[bool, (N_BAND_SET, N_BAND)]
+        print('creating band set space...')
+
         def list_band_set_nodup_member(ss_band_rest=None, member_count=None, b_min=0):
             if ss_band_rest is None:
                 ss_band_rest = np.ones(self.n_band, dtype=np.uint8)
@@ -128,6 +130,7 @@ class ProjectData:
         return len(self.band_set_space)
 
     def _band_set_neighbour_indexes(self):  # -> list with N_BAND_SET items of ndarray[int, (None,)]
+        print('creating band set neighbour indexes...')
         dist_mat = cdist(self.band_set_space, self.band_set_space, metric='hamming')
         dist_mat *= self.n_band
         hamming_1_or_2 = (dist_mat == 1) | (dist_mat == 2)
@@ -139,15 +142,15 @@ class ProjectData:
 
     @functools.cached_property
     def band_set_neighbour_indexes(self):  # band set arrays of index to its neighbours
-        if '_band_set_neighbour_indexes' not in self.__cache:
-            self.__cache['_band_set_neighbour_indexes'] = self._band_set_space()
-        a = self.__cache['_band_set_neighbour_indexes']
+        if 'band_set_neighbour_indexes' not in self.__cache:
+            self.__cache['band_set_neighbour_indexes'] = self._band_set_neighbour_indexes()
+        a = self.__cache['band_set_neighbour_indexes']
         for item in a:
             item.setflags(write=False)
         return a
 
     @functools.lru_cache(maxsize=65536)
-    def get_neighbour(self, band_set_index):
+    def get_neighbours(self, band_set_index):
         return self.band_set_neighbour_indexes[band_set_index]
 
     def dump_cache(self):
@@ -170,7 +173,7 @@ class ProjectData:
     def n_max_total_bands(self):
         return self.n_max_band_occurrence * self.n_band
 
-    def band_occurrence_ratio(self, band_set_indexes):
+    def band_occupation_rate(self, band_set_indexes):
         band_occ_count = self.table_band_occurrence_count(band_set_indexes)
         n_total_band_occ = band_occ_count.sum()
         return n_total_band_occ / self.n_max_total_bands
