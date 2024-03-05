@@ -1,0 +1,272 @@
+{
+  "band_list": [
+    {
+      "band_name": "バンド1",
+      "member_names": [
+        "Aさん",
+        "Bさん",
+        "Cさん",
+        "Dさん"
+      ]
+    },
+    {
+      "band_name": "バンド2",
+      "member_names": [
+        "Eさん",
+        "Hさん",
+        "Iさん",
+        "Dさん",
+        "Jさん"
+      ]
+    },
+    {
+      "band_name": "バンド3",
+      "member_names": [
+        "Eさん",
+        "Fさん",
+        "Gさん"
+      ]
+    },
+    {
+      "band_name": "バンド4",
+      "member_names": [
+        "Fさん",
+        "Kさん",
+        "Lさん",
+        "Mさん"
+      ]
+    },
+    {
+      "band_name": "バンド5",
+      "member_names": [
+        "Eさん",
+        "Nさん",
+        "Oさん"
+      ]
+    },
+    {
+      "band_name": "バンド6",
+      "member_names": [
+        "Bさん",
+        "Qさん",
+        "Cさん",
+        "Pさん"
+      ]
+    },
+    {
+      "band_name": "バンド7",
+      "member_names": [
+        "Rさん",
+        "Hさん",
+        "AAさん",
+        "ARさん",
+        "ANさん"
+      ]
+    },
+    {
+      "band_name": "バンド8",
+      "member_names": [
+        "Rさん",
+        "Sさん",
+        "Lさん",
+        "Pさん",
+        "Tさん"
+      ]
+    },
+    {
+      "band_name": "バンド9",
+      "member_names": [
+        "Aさん",
+        "Uさん",
+        "Dさん"
+      ]
+    },
+    {
+      "band_name": "バンド10",
+      "member_names": [
+        "Hさん",
+        "Iさん",
+        "Vさん",
+        "Tさん"
+      ]
+    },
+    {
+      "band_name": "バンド11",
+      "member_names": [
+        "Qさん",
+        "Wさん",
+        "Lさん",
+        "Mさん",
+        "Jさん"
+      ]
+    },
+    {
+      "band_name": "バンド12",
+      "member_names": [
+        "Cさん",
+        "Yさん",
+        "Wさん",
+        "Zさん",
+        "Dさん"
+      ]
+    },
+    {
+      "band_name": "バンド13",
+      "member_names": [
+        "AAさん",
+        "ABさん",
+        "ACさん",
+        "Pさん",
+        "ADさん"
+      ]
+    },
+    {
+      "band_name": "バンド14",
+      "member_names": [
+        "Aさん",
+        "Bさん",
+        "Cさん",
+        "Mさん"
+      ]
+    },
+    {
+      "band_name": "バンド15",
+      "member_names": [
+        "AEさん",
+        "ABさん",
+        "AFさん",
+        "AGさん"
+      ]
+    },
+    {
+      "band_name": "バンド16",
+      "member_names": [
+        "AHさん",
+        "AIさん",
+        "AJさん",
+        "Vさん"
+      ]
+    },
+    {
+      "band_name": "バンド17",
+      "member_names": [
+        "AKさん",
+        "ALさん",
+        "AMさん",
+        "ANさん"
+      ]
+    },
+    {
+      "band_name": "バンド18",
+      "member_names": [
+        "AOさん",
+        "AQさん",
+        "AKさん",
+        "ARさん",
+        "AGさん",
+        "Yさん"
+      ]
+    },
+    {
+      "band_name": "バンド19",
+      "member_names": [
+        "Kさん",
+        "Fさん",
+        "Lさん",
+        "Oさん"
+      ]
+    },
+    {
+      "band_name": "バンド20",
+      "member_names": [
+        "AHさん",
+        "AJさん",
+        "APさん"
+      ]
+    },
+    {
+      "band_name": "バンド21",
+      "member_names": [
+        "ASさん",
+        "ATさん",
+        "Iさん",
+        "Sさん",
+        "Tさん"
+      ]
+    },
+    {
+      "band_name": "バンド22",
+      "member_names": [
+        "AUさん",
+        "ALさん",
+        "AMさん",
+        "Sさん"
+      ]
+    },
+    {
+      "band_name": "バンド23",
+      "member_names": [
+        "AOさん",
+        "AVさん",
+        "AWさん",
+        "Oさん",
+        "Jさん"
+      ]
+    },
+    {
+      "band_name": "バンド24",
+      "member_names": [
+        "AXさん",
+        "Qさん",
+        "Uさん",
+        "Mさん",
+        "Tさん"
+      ]
+    },
+    {
+      "band_name": "バンド25",
+      "member_names": [
+        "AEさん",
+        "ASさん",
+        "AYさん",
+        "AZさん"
+      ]
+    },
+    {
+      "band_name": "バンド26",
+      "member_names": [
+        "Cさん",
+        "Qさん",
+        "ATさん",
+        "ACさん",
+        "ANさん",
+        "AJさん"
+      ]
+    },
+    {
+      "band_name": "バンド27",
+      "member_names": [
+        "AUさん",
+        "BAさん",
+        "BCさん",
+        "Zさん",
+        "AZさん",
+        "ADさん"
+      ]
+    },
+    {
+      "band_name": "バンド28",
+      "member_names": [
+        "BDさん",
+        "AXさん",
+        "Wさん",
+        "AYさん",
+        "AUさん"
+      ]
+    }
+  ],
+  "config": {
+    "n_room": 7,
+    "n_timespan": 9
+  }
+}
