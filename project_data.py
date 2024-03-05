@@ -3,12 +3,9 @@ import functools
 import json
 
 import numpy as np
-import pandas as pd
 from scipy.spatial.distance import cdist
 
 from project import Project
-
-from typing import NamedTuple
 
 
 class ProjectData:
@@ -167,7 +164,7 @@ class ProjectData:
 
     @functools.cached_property
     def n_max_band_occurrence(self):
-        return int(self.n_timespan * self.n_room) / self.n_band
+        return int(self.n_timespan * self.n_room) // self.n_band
 
     @functools.cached_property
     def n_max_total_bands(self):
@@ -175,5 +172,6 @@ class ProjectData:
 
     def band_occupation_rate(self, band_set_indexes):
         band_occ_count = self.table_band_occurrence_count(band_set_indexes)
+        band_occ_count = np.clip(band_occ_count, 0, self.n_max_band_occurrence)
         n_total_band_occ = band_occ_count.sum()
         return n_total_band_occ / self.n_max_total_bands

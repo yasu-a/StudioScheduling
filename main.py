@@ -187,7 +187,7 @@ class State:
 if __name__ == '__main__':
     N_ROOMS = 7
     print(f'{N_ROOMS=}')
-    N_TIMESPANS = 9
+    N_TIMESPANS = 5
     print(f'{N_TIMESPANS=}')
 
     s_timespan = np.arange(N_TIMESPANS)
@@ -283,7 +283,7 @@ if __name__ == '__main__':
 def main():
     state = State.random_init()
     best = None
-    bar = tqdm(range(64))
+    bar = tqdm(range(128))
     for i_iter in bar:
         state.local_search()
         state.update_score_stat()
